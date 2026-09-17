@@ -1,19 +1,49 @@
-import os, json, urllib.request, time
+import os, json, urllib.request, urllib.parse
 
 TOPIC=os.environ["NTFY_TOPIC"]
 STATE_FILE="state.json"
 
 LEVELS={
- "BTCUSDT":{"name":"BTC","buy":[73000,70000],"sell":[79000,82000,86000]},
- "ETHUSDT":{"name":"ETH","buy":[2300,2150],"sell":[2550,2700,2900]},
- "SOLUSDT":{"name":"SOL","buy":[92,85],"sell":[105,115,125]}
+ "BTC":{"buy":[73000,70000],"sell":[79000,82000,86000]},
+ "ETH":{"buy":[2300,2150],"sell":[2550,2700,2900]},
+ "SOL":{"buy":[92,85],"sell":[105,115,125]}
 }
 
-def get_price(symbol):
-    url=f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
-    req=urllib.request.Request(url,headers={"User-Agent":"KriptoAlarmCloudV2/1.0"})
-    with urllib.request.urlopen(req,timeout=15) as r:
-        return float(json.loads(r.read().decode())["price"])
+CG_IDS={"BTC":"bitcoin","ETH":"ethereum","SOL":"solana"}
+CB_PAIRS={"BTC":"BTC-USD","ETH":"ETH-USD","SOL":"SOL-USD"}
+
+def request_json(url):
+    req=urllib.request.Request(url,headers={
+        "User-Agent":"KriptoAlarmCloudV2.1/1.0",
+        "Accept":"application/json"
+    })
+    with urllib.request.urlopen(req,timeout=20) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def coingecko_prices():
+    ids=",".join(CG_IDS.values())
+    url="https://api.coingecko.com/api/v3/simple/price?ids="+urllib.parse.quote(ids,safe=",")+"&vs_currencies=usd"
+    d=request_json(url)
+    return {coin:float(d[cgid]["usd"]) for coin,cgid in CG_IDS.items()}
+
+def coinbase_price(coin):
+    d=request_json("https://api.coinbase.com/v2/prices/"+CB_PAIRS[coin]+"/spot")
+    return float(d["data"]["amount"])
+
+def get_prices():
+    # Primary: one CoinGecko request for all coins.
+    try:
+        p=coingecko_prices()
+        print("PRICE SOURCE: CoinGecko")
+        return p
+    except Exception as e:
+        print("CoinGecko failed:",repr(e))
+    # Fallback: Coinbase, separately per asset.
+    out={}
+    for coin in LEVELS:
+        out[coin]=coinbase_price(coin)
+    print("PRICE SOURCE: Coinbase fallback")
+    return out
 
 def publish(title,message,priority,tags):
     payload=json.dumps({
@@ -22,8 +52,7 @@ def publish(title,message,priority,tags):
     },ensure_ascii=False).encode("utf-8")
     req=urllib.request.Request("https://ntfy.sh/",data=payload,
         headers={"Content-Type":"application/json; charset=utf-8"},method="POST")
-    with urllib.request.urlopen(req,timeout=15) as r:
-        r.read()
+    with urllib.request.urlopen(req,timeout=20) as r:r.read()
 
 def load_state():
     try:
@@ -47,36 +76,36 @@ def zone(side,p,target):
 def fmt(x):
     return f"{x:,.2f}".replace(",","X").replace(".",",").replace("X",".")
 
+prices=get_prices()
 state=load_state()
 newstate={}
 events=[]
+rank={"none":0,"near":1,"critical":2,"trigger":3}
 
-for symbol,c in LEVELS.items():
-    p=get_price(symbol)
-    print(c["name"],p)
+for coin,c in LEVELS.items():
+    p=prices[coin]
+    print(f"{coin}: {p:.2f} USD")
     for side in ("buy","sell"):
         label="ALIM" if side=="buy" else "KÂR ALMA"
         for idx,target in enumerate(c[side]):
-            key=f"{symbol}:{side}:{idx}"
+            key=f"{coin}:{side}:{idx}"
             z=zone(side,p,float(target))
             newstate[key]=z
             previous=state.get(key,"none")
-            # Only notify when entering a new/higher zone; no spam every 5 minutes.
-            rank={"none":0,"near":1,"critical":2,"trigger":3}
             if rank[z] > rank.get(previous,0):
                 if z=="near":
-                    events.append((3,["bell"],f"{c['name']} {label} YAKLAŞIYOR",
-                      f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD • hedefe %2 içinde."))
+                    events.append((3,["bell"],f"{coin} {label} YAKLAŞIYOR",
+                        f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD • hedefe %2 içinde."))
                 elif z=="critical":
-                    events.append((5,["warning","rotating_light"],f"{c['name']} {label} KRİTİK",
-                      f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD • hedefe %0,5 içinde."))
+                    events.append((5,["warning","rotating_light"],f"{coin} {label} KRİTİK",
+                        f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD • hedefe %0,5 içinde."))
                 elif z=="trigger":
-                    events.append((5,["rotating_light"],f"{c['name']} {label} TETİKLENDİ",
-                      f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD. Eşik gerçekleşti."))
+                    events.append((5,["rotating_light"],f"{coin} {label} TETİKLENDİ",
+                        f"Fiyat {fmt(p)} USD • Hedef {fmt(target)} USD. Eşik gerçekleşti."))
 
-# Send all newly entered zones.
 for priority,tags,title,msg in events:
     publish(title,msg,priority,tags)
-    print("SENT:",title,msg)
+    print("NTFY SENT:",title,"|",msg)
 
 save_state(newstate)
+print("DONE. New alerts:",len(events))

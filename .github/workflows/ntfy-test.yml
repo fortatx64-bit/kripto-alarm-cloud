@@ -1,0 +1,20 @@
+name: NTFY Telefon Testi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Telefona test alarmi gonder
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          curl -fsS \
+            -H "Title: KRIPTO CLOUD TEST" \
+            -H "Priority: urgent" \
+            -H "Tags: rotating_light,warning" \
+            -d "GitHub Cloud -> ntfy -> telefon alarm sistemi calisiyor." \
+            "https://ntfy.sh/$NTFY_TOPIC"

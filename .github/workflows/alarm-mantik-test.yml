@@ -1,0 +1,62 @@
+name: Alarm Mantik Testi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Alarm senaryolarini telefona gonder
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          send_ntfy () {
+            curl -fsS \
+              -H "Title: $1" \
+              -H "Priority: $2" \
+              -H "Tags: $3" \
+              -d "$4" \
+              "https://ntfy.sh/$NTFY_TOPIC"
+            echo
+            sleep 2
+          }
+
+          send_ntfy \
+            "BTC ALIM YAKLASIYOR" \
+            "default" \
+            "bell" \
+            "TEST | BTC 73.500 USD | Alim hedefi 73.000 USD | YAKLASIYOR"
+
+          send_ntfy \
+            "BTC ALIM TETIKLENDI" \
+            "urgent" \
+            "rotating_light" \
+            "TEST | BTC 73.000 USD | Alim hedefi 73.000 USD | TETIKLENDI"
+
+          send_ntfy \
+            "ETH ALIM KRITIK" \
+            "urgent" \
+            "warning" \
+            "TEST | ETH 2.310 USD | Alim hedefi 2.300 USD | KRITIK"
+
+          send_ntfy \
+            "ETH ALIM TETIKLENDI" \
+            "urgent" \
+            "rotating_light" \
+            "TEST | ETH 2.300 USD | Alim hedefi 2.300 USD | TETIKLENDI"
+
+          send_ntfy \
+            "SOL KAR ALMA YAKLASIYOR" \
+            "default" \
+            "bell" \
+            "TEST | SOL 104 USD | Kar alma hedefi 105 USD | YAKLASIYOR"
+
+          send_ntfy \
+            "SOL KAR ALMA TETIKLENDI" \
+            "urgent" \
+            "rotating_light" \
+            "TEST | SOL 105 USD | Kar alma hedefi 105 USD | TETIKLENDI"
+
+          echo "Tum alarm test bildirimleri gonderildi."

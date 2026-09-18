@@ -6,7 +6,7 @@
   "BTC:sell:2": "none",
   "ETH:buy:0": "none",
   "ETH:buy:1": "none",
-  "ETH:sell:0": "none",
+  "ETH:sell:0": "near",
   "ETH:sell:1": "none",
   "ETH:sell:2": "none",
   "SOL:buy:0": "none",

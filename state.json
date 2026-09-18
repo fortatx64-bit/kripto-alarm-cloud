@@ -1,7 +1,7 @@
 {
   "BTC:buy:0": "none",
   "BTC:buy:1": "none",
-  "BTC:sell:0": "none",
+  "BTC:sell:0": "near",
   "BTC:sell:1": "none",
   "BTC:sell:2": "none",
   "ETH:buy:0": "none",

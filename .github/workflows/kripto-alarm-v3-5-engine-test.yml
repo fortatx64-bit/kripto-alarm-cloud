@@ -2,7 +2,13 @@ name: Kripto Alarm Cloud v3.5 ENGINE TEST
 
 on:
   workflow_dispatch:
-
+  schedule:
+    - cron: "*/5 * * * *"
+    
+concurrency:
+  group: kripto-alarm-v3-5
+  cancel-in-progress: false 
+  
 permissions:
   contents: write
 

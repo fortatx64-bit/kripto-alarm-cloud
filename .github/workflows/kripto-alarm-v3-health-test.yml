@@ -1,0 +1,59 @@
+name: Kripto Alarm Cloud v3.4 HEALTH TEST
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Health test modu"
+        required: true
+        type: choice
+        options:
+          - fail
+          - recover
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kripto-alarm-v3-health-test
+  cancel-in-progress: false
+
+jobs:
+  health-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: En guncel main
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Health testini calistir
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          HEALTH_TEST_MODE: ${{ inputs.mode }}
+        run: python health_test_v3.py
+
+      - name: Test state kaydet
+        run: |
+          if [ -z "$(git status --porcelain -- health_test_state.json)" ]; then
+            echo "health_test_state.json degismedi."
+            exit 0
+          fi
+          git config user.name "kripto-alarm-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add health_test_state.json
+          git commit -m "Cloud v3 health test state"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

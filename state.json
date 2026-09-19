@@ -7,7 +7,7 @@
   "ETH:buy:0": "none",
   "ETH:buy:1": "none",
   "ETH:sell:0": "completed",
-  "ETH:sell:1": "near",
+  "ETH:sell:1": "none",
   "ETH:sell:2": "none",
   "SOL:buy:0": "none",
   "SOL:buy:1": "none",

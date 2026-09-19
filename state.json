@@ -2,7 +2,7 @@
   "BTC:buy:0": "none",
   "BTC:buy:1": "none",
   "BTC:sell:0": "completed",
-  "BTC:sell:1": "near",
+  "BTC:sell:1": "critical",
   "BTC:sell:2": "none",
   "ETH:buy:0": "none",
   "ETH:buy:1": "none",

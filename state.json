@@ -12,6 +12,6 @@
   "SOL:buy:0": "none",
   "SOL:buy:1": "none",
   "SOL:sell:0": "trigger",
-  "SOL:sell:1": "near",
+  "SOL:sell:1": "none",
   "SOL:sell:2": "none"
 }

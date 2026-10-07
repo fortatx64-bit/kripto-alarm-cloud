@@ -3,7 +3,7 @@
     "alerted": false,
     "failures": 0,
     "last_error": "",
-    "last_ok_epoch": 1791358712
+    "last_ok_epoch": 1791359519
   },
   "levels": {
     "BTC:buy:70000": "none",

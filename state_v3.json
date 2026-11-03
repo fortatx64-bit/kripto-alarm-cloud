@@ -3,7 +3,7 @@
     "alerted": false,
     "failures": 0,
     "last_error": "",
-    "last_ok_epoch": 1793667472
+    "last_ok_epoch": 1793690893
   },
   "levels": {
     "BTC:buy:70000": "none",
@@ -17,7 +17,7 @@
     "ETH:sell:2700": "none",
     "ETH:sell:2900": "none",
     "SOL:buy:85": "none",
-    "SOL:buy:92": "critical",
+    "SOL:buy:92": "trigger",
     "SOL:sell:105": "completed",
     "SOL:sell:115": "none",
     "SOL:sell:125": "none"
